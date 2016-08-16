@@ -19,28 +19,28 @@ using namespace std;
 
 #define DEFAULT_PORT "27015"
 #define DEFAULT_BUFLEN 512
-//#define UP_UP 0x01
-//#define DOWN_UP 0x02
-//#define LEFT_UP 0x03
-//#define RIGHT_UP 0x04
-//#define UP_DOWN 0x11
-//#define DOWN_DOWN 0x12
-//#define LEFT_DOWN 0x13
-//#define RIGHT_DOWN 0x14
+#define UP_UP 0x01
+#define DOWN_UP 0x02
+#define LEFT_UP 0x03
+#define RIGHT_UP 0x04
+#define UP_DOWN 0x11
+#define DOWN_DOWN 0x12
+#define LEFT_DOWN 0x13
+#define RIGHT_DOWN 0x14
 
-#define UP_UP  "uu"
-#define DOWN_UP "du"
-#define LEFT_UP "lu"
-#define RIGHT_UP "ru"
-#define UP_DOWN "ud"
-#define DOWN_DOWN "dd"
-#define LEFT_DOWN "ld"
-#define RIGHT_DOWN "rd"
+//#define UP_UP  "uu"
+//#define DOWN_UP "du"
+//#define LEFT_UP "lu"
+//#define RIGHT_UP "ru"
+//#define UP_DOWN "ud"
+//#define DOWN_DOWN "dd"
+//#define LEFT_DOWN "ld"
+//#define RIGHT_DOWN "rd"
 
 HHOOK hKeyHook;
 KBDLLHOOKSTRUCT kbdStruct;
 SOCKET ConnectSocket = INVALID_SOCKET;
-char* sendbuf;
+char sendbuf[1];
 LRESULT CALLBACK KeyboardProc(UINT, WPARAM, LPARAM);
 int TCPstart(char*);
 int TCPsend(char*);
@@ -65,8 +65,7 @@ int __cdecl main(int argc, char **argv) {
 		return 1;
 	}
 	cout << "TCP connection established" << endl;
-	sendbuf = "test";
-	TCPsend(sendbuf);
+	//TCPsend(sendbuf);
 	//send(ConnectSocket, sendbuf, strlen(sendbuf), 0);
 
 	//Keyboard logger setup
@@ -97,21 +96,22 @@ LRESULT CALLBACK KeyboardProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 			case VK_LEFT:
 				printf("left key pressed down\n");
-				sendbuf = LEFT_DOWN;
+				sendbuf[0] = LEFT_DOWN;
 				break;
 			case VK_RIGHT:
 				printf("right key pressed down\n");
-				sendbuf = RIGHT_DOWN;
+				sendbuf[0] = RIGHT_DOWN;
 				break;
 			case VK_UP:
 				printf("Up key pressed down\n");
-				sendbuf = UP_DOWN;
+				sendbuf[0] = UP_DOWN;
 				break;
 			case VK_DOWN:
 				printf("Down key pressed down\n");
-				sendbuf = DOWN_DOWN;
+				sendbuf[0] = DOWN_DOWN;
 				break;
 			default:
+				sendbuf[0] = 0x00;
 				printf("in keydown msg\n");
 				break;
 			}
@@ -122,31 +122,38 @@ LRESULT CALLBACK KeyboardProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 			case VK_LEFT:
 				printf("left key released\n");
-				sendbuf = LEFT_UP;
+				sendbuf[0] = LEFT_UP;
 				break;
 			case VK_RIGHT:
 				printf("right key released\n");
-				sendbuf = RIGHT_UP;
+				sendbuf[0] = RIGHT_UP;
 				break;
 			case VK_UP:
 				printf("Up key released\n");
-				sendbuf = UP_UP;
+				sendbuf[0] = UP_UP;
 				break;
 			case VK_DOWN:
 				printf("Down keys released\n");
-				sendbuf = DOWN_UP;
+				sendbuf[0] = DOWN_UP;
 				break;
 			default:
 				printf("in keyup msg\n");
+				sendbuf[0] = 0x00;
 				break;
 			}
-			TCPsend(sendbuf);
+			for (int i = 0; i < 10; i++) {               //losing package due to delay on the server side, so send 10 times with delay
+				TCPsend(sendbuf);
+				Sleep(10);
+			}
 			break;
 		default:
 			//printf("in other msg%d, key %d\n", uMsg, wParam);
+			sendbuf[0] = 0x00;
+			TCPsend(sendbuf);
 			return DefWindowProc(NULL, uMsg, wParam, lParam);
 		}
 	}
+
 	return CallNextHookEx(hKeyHook, uMsg, wParam, lParam);
 }
 
